@@ -1,0 +1,10 @@
+[workspace]
+
+members = [
+    "client",
+    "server",
+]
+
+
+[profile.release]
+lto = "fat"
