@@ -1,8 +1,8 @@
 use byteorder::ReadBytesExt;
-use concrete::prelude::*;
 use concrete::{set_server_key, FheUint16, FheUint3, ServerKey};
 use std::net::{TcpListener, TcpStream};
 use std::ops::{Add, Mul};
+use std::io::Write;
 
 fn fhe_computation<'a, T>(a: &'a T, b: &'a T, c: &'a T) -> T
 where
@@ -12,7 +12,8 @@ where
     (a + b) * c
 }
 
-fn handle_client(mut stream: TcpStream) -> std::io::Result<()> {
+fn handle_client(stream: TcpStream) -> std::io::Result<()> {
+    let mut stream = bufstream::BufStream::new(stream);
     println!("[Server] <---- [Client]: Receiving server keys from client");
     {
         let server_keys: ServerKey = bincode::deserialize_from(&mut stream).unwrap();
@@ -37,6 +38,7 @@ fn handle_client(mut stream: TcpStream) -> std::io::Result<()> {
             println!("done.");
             println!("[Server] ----> [Client]: Sending Result");
             bincode::serialize_into(&mut stream, &result).unwrap();
+            stream.flush()?;
         }
 
         {
@@ -50,6 +52,7 @@ fn handle_client(mut stream: TcpStream) -> std::io::Result<()> {
             println!("done.");
             println!("[Server] ----> [Client]: Sending Result");
             bincode::serialize_into(&mut stream, &result).unwrap();
+            stream.flush()?;
         }
     }
 

@@ -18,7 +18,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let (mut client_keys, mut server_keys) = key_gen()?;
 
     println!("[Client] ----> [Server]: Connecting to server");
-    let mut stream = TcpStream::connect("127.0.0.1:8080")?;
+    let mut stream = bufstream::BufStream::new(TcpStream::connect("127.0.0.1:8080")?);
 
     {
         println!("[Client] ----> [Server]: Sending Bootstrap Keys to server");
@@ -38,6 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             bincode::serialize_into(&mut stream, &a)?;
             bincode::serialize_into(&mut stream, &b)?;
             bincode::serialize_into(&mut stream, &c)?;
+            stream.flush()?;
 
             println!("[Client] <---- [Server]: Receiving result");
             let result: FheUint3 = bincode::deserialize_from(&mut stream).unwrap();
@@ -55,6 +56,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             bincode::serialize_into(&mut stream, &a)?;
             bincode::serialize_into(&mut stream, &b)?;
             bincode::serialize_into(&mut stream, &c)?;
+            stream.flush()?;
 
             println!("[Client] <---- [Server]: Receiving result");
             let result: FheUint16 = bincode::deserialize_from(&mut stream).unwrap();
@@ -66,6 +68,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let should_exit = ask_for_exit();
         if should_exit {
             stream.write_u8(0)?;
+            stream.flush()?;
             break;
         }
     }
